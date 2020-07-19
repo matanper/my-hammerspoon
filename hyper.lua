@@ -13,6 +13,7 @@ function exitHyperMode()
 end
 
 -- Bind the Hyper key to key F20
+-- Map F20 to convinient key (e.g: right option) using Karabiner Element
 f20 = hs.hotkey.bind({}, 'F20',enterHyperMode, exitHyperMode)
 
 return hyper
