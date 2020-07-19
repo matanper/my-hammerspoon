@@ -1,6 +1,6 @@
 hyper = require('hyper')
 appSwitcher = require('app-switcher')
-windowsResize = require('windows-resize')
+winwin = hs.loadSpoon('WinWin')
 
 -- shortcut for sleep
 hyper:bind({"cmd"}, "s", function()
@@ -8,11 +8,16 @@ hyper:bind({"cmd"}, "s", function()
 end)
 
 -- shortcut for window resize
-hyper:bind({}, "right", windowsResize.move('right'))
-hyper:bind({}, "left", windowsResize.move('left'))
-hyper:bind({}, "up", windowsResize.maximize)
-hyper:bind({}, "down", windowsResize.hide)
-hyper:bind({}, "return", windowsResize.toggleFullscreen)
+winwin.gridparts = 3
+hyper:bind({}, "right", function() winwin:moveAndResize('halfright') end)
+hyper:bind({}, "left", function() winwin:moveAndResize('halfleft') end)
+hyper:bind({}, "up", function() winwin:moveAndResize('maximize') end)
+hyper:bind({}, "down", function()
+  winwin:moveAndResize('halfdown')
+end)
+hyper:bind({}, "return", function()
+  hs.window.focusedWindow():toggleFullScreen()
+end)
 
 -- shortcut to show desktop
 hyper:bind({}, "e", function()
