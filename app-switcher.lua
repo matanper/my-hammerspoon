@@ -9,7 +9,7 @@ this.alert = function(message)
         radius = 10
     }
     hs.alert.closeAll(0)
-    hs.alert.show(message, style, 1)
+    hs.alert.show(message, style, 3)
 end
 
 
@@ -69,14 +69,20 @@ this.handleApp = function(appName)
         app:selectMenuItem('New Window')
     -- If there are windows but app not frontmost open first one
     elseif app:isFrontmost() == false then
-        -- Get focused window (which was the last in use)
+        -- Get focused window of app (which was the last in use)
         win = app:focusedWindow()
-        win:focus()
+        this.moveToWindow(win)
     else
         currId = app:focusedWindow():id()
         win = this.nextTableItem(appWindows, currId)
-        win:focus()
+        this.moveToWindow(win)
     end
+end
+
+this.moveToWindow = function(win)
+    win:focus()
+    center = hs.geometry.rectMidPoint(win:frame())
+    hs.mouse.setAbsolutePosition(center)
 end
 
 -- Init of application map
