@@ -9,45 +9,15 @@ hyper:bind({"cmd"}, "s", function()
 end)
 
 -- shortcut for window resize
-hyper:bind({}, "right", function() winwin:moveAndResize('halfright') end)
-hyper:bind({}, "left", function() winwin:moveAndResize('halfleft') end)
+hyper:bind({}, "right", function() winwin:moveAndResize('halfright') end, nil, function() winwin:moveToScreen('right') end)
+hyper:bind({}, "left", function() winwin:moveAndResize('halfleft') end, nil, function() winwin:moveToScreen('left') end)
 hyper:bind({}, "up", function() winwin:moveAndResize('maximize') end)
-hyper:bind({}, "down", function()
-  before = hs.window.focusedWindow():frame()
-  winwin:moveAndResize('halfdown')
-  after = hs.window.focusedWindow():frame()
-  if (before == after) then
-    winwin:moveAndResize('halfup')
-  end
-end)
-hyper:bind({}, "return", function()
-  hs.window.focusedWindow():toggleFullScreen()
-end)
-
--- shortcuts for window screen movement
-hyper:bind({'cmd'}, 'left', function()
-  local win = hs.window.focusedWindow()
-  local nextScreen = win:screen():previous()
-  win:moveToScreen(nextScreen)
-end)
-
-hyper:bind({'cmd'}, 'right', function()
-  win = hs.window.focusedWindow()
-  isFullScreen = win:isFullScreen()
-  logger:i(isFullScreen)
-  if (isFullScreen) then
-    hs.alert.show("turn off fullscreen")
-    win:setFullScreen(false)
-  end
-  win:moveOneScreenEast()
-  if (isFullScreen) then
-    win:setFullScreen(true)
-  end
-end)
+hyper:bind({}, 'down',  function() winwin:moveAndResize('halfdown') end, nil, function() winwin:moveAndResize('halfup') end)
+hyper:bind({}, "return", function() hs.window.focusedWindow():toggleFullScreen() end)
 
 -- shortcut to show desktop
 hyper:bind({}, "delete", function()
-  app = hs.application.find('Finder')
+  local app = hs.application.find('Finder')
   app:activate()
   app:selectMenuItem('Hide Others')
 end)

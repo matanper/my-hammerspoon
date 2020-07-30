@@ -1,6 +1,7 @@
 local this = {}
 this.logger = hs.logger.new('app-switcher','info')
 this.allAppsWindows = {}
+this.winToApps = {}
 
 this.alert = function(message)
     style = {
@@ -17,22 +18,26 @@ end
 -- ===================================================
 f = hs.window.filter.new()
 f:subscribe(hs.window.filter.windowCreated, function(win)
-    id = win:application():bundleID()
-    if (this.allAppsWindows[id] == nil) then
-        this.allAppsWindows[id] = {}
+    appid = win:application():bundleID()
+    if (this.allAppsWindows[appid] == nil) then
+        this.allAppsWindows[appid] = {}
     end
-    this.allAppsWindows[id][win:id()] = win
+    this.allAppsWindows[appid][win:id()] = win
+    this.winToApps[win:id()] = appid
 end)
 
 f:subscribe(hs.window.filter.windowDestroyed, function(win)
-    id = win:application():bundleID()
-    this.allAppsWindows[id][win:id()] = nil
+    appid = this.winToApps[win:id()]
+    if appid then
+        this.allAppsWindows[appid][win:id()] = nil
+    end
 end)
 
 -- Table helper functions
 -- =================================================================
 
-this.isTableEmpty = function(t)
+this.appHaveWindows = function(app)
+    t = this.allAppsWindows[app:bundleID()]
     if (t == nil) then return false end
     for _,_ in pairs(t) do
         return true
@@ -40,8 +45,9 @@ this.isTableEmpty = function(t)
     return false
 end
 
-this.nextTableItem = function(t, key)
-    local nextKey = next(t, key)
+this.nextWindow = function(app, lastWindow)
+    t = this.allAppsWindows[app:bundleID()]
+    local nextKey = next(t, lastWindow)
     -- If the key is the last getting the first key
     if nextKey == nill then
         nextKey = next(t, nil)
@@ -54,30 +60,28 @@ end
 this.handleApp = function(appName)
     local app = hs.application.find(appName)
     -- If app is closed, open it
-    if app == nil then
-        this.alert('Launching ' .. appName .. '...')
-        this.logger:i("Launching " .. appName)
-        app = hs.application.open(appName)
-    end
-    -- Get windows of app
-    local appWindows = this.allAppsWindows[app:bundleID()]
-    local windowsExists = this.isTableEmpty(appWindows)
-    app:activate(true, 3)
-    -- If no windows then open one
-    if windowsExists == false then
-        this.logger:i("Open New Window " .. appName)
-        app:selectMenuItem('New Window')
+    if app == nil or not(this.appHaveWindows(app)) then
+        this.logger:i('Open ' .. appName)
+        this.alert('Open ' .. appName)
+        app = hs.application.open(appName, 3)
+        if app then
+            win = app:focusedWindow()
+        end
     -- If there are windows but app not frontmost open first one
-    elseif app:isFrontmost() == false then
+    elseif not(app:isFrontmost()) then
+        this.logger:i('Switch to frontmost ' .. appName)
         -- Get focused window of app (which was the last in use)
         win = app:focusedWindow()
-        this.moveToWindow(win)
     else
-        currId = app:focusedWindow():id()
-        win = this.nextTableItem(appWindows, currId)
+        lastWin = app:focusedWindow():id()
+        win = this.nextWindow(app, lastWin)
+    end
+
+    if win then
         this.moveToWindow(win)
     end
 end
+
 
 this.moveToWindow = function(win)
     win:focus()
