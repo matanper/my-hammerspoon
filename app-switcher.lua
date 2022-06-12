@@ -18,7 +18,7 @@ end
 this.moveToWindow = function(win)
     win:focus()
     center = hs.geometry.rectMidPoint(win:frame())
-    hs.mouse.setAbsolutePosition(center)
+    hs.mouse.absolutePosition(center)
     this.lastWindowId = win:id()
 end
 
