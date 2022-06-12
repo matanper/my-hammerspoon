@@ -1,8 +1,9 @@
 local this = {}
 this.logger = hs.logger.new('app-switcher','info')
-this.allAppsWindows = {}
-this.winToApps = {}
+this.lastApp = nil
+this.lastWindowId = nil
 
+-- Alert function
 this.alert = function(message)
     style = {
         strokeColor = {white = 1, alpha = 0},
@@ -13,91 +14,100 @@ this.alert = function(message)
     hs.alert.show(message, style, 3)
 end
 
-
--- Filter subscription for window events
--- ===================================================
-f = hs.window.filter.new()
-f:subscribe(hs.window.filter.windowCreated, function(win)
-    appid = win:application():bundleID()
-    if (this.allAppsWindows[appid] == nil) then
-        this.allAppsWindows[appid] = {}
-    end
-    this.allAppsWindows[appid][win:id()] = win
-    this.winToApps[win:id()] = appid
-end)
-
-f:subscribe(hs.window.filter.windowDestroyed, function(win)
-    appid = this.winToApps[win:id()]
-    if appid then
-        this.allAppsWindows[appid][win:id()] = nil
-    end
-end)
-
--- Table helper functions
--- =================================================================
-
-this.appHaveWindows = function(app)
-    t = this.allAppsWindows[app:bundleID()]
-    if (t == nil) then return false end
-    for _,_ in pairs(t) do
-        return true
-    end
-    return false
-end
-
-this.nextWindow = function(app, lastWindow)
-    t = this.allAppsWindows[app:bundleID()]
-    local nextKey = next(t, lastWindow)
-    -- If the key is the last getting the first key
-    if nextKey == nill then
-        nextKey = next(t, nil)
-    end
-    return t[nextKey]
-end
-
--- Main logic
--- =================================================================
-this.handleApp = function(appName)
-    local app = hs.application.find(appName)
-    -- If app is closed, open it
-    if app == nil or not(this.appHaveWindows(app)) then
-        this.logger:i('Open ' .. appName)
-        this.alert('Open ' .. appName)
-        app = hs.application.open(appName, 3)
-        if app then
-            win = app:focusedWindow()
-        end
-    -- If there are windows but app not frontmost open first one
-    elseif not(app:isFrontmost()) then
-        this.logger:i('Switch to frontmost ' .. appName)
-        -- Get focused window of app (which was the last in use)
-        win = app:focusedWindow()
-    else
-        lastWin = app:focusedWindow():id()
-        win = this.nextWindow(app, lastWin)
-    end
-
-    if win then
-        this.moveToWindow(win)
-    end
-end
-
-
+-- Move to given window and center mouse on it
 this.moveToWindow = function(win)
     win:focus()
     center = hs.geometry.rectMidPoint(win:frame())
     hs.mouse.setAbsolutePosition(center)
+    this.lastWindowId = win:id()
 end
 
+this.cycleWindows = function(appWindows)
+    local idToWindow = {}
+    local idsList = {}
+    local nextWindow = nil
+    for _, win in pairs(appWindows) do
+        idToWindow[win:id()] = win
+        table.insert(idsList, win:id())
+    end
+    table.sort(idsList)
+
+    local lastWindow = idToWindow[this.lastWindowId]
+    -- Last window no longer exists, maybe closed. Then just open first window from the list
+    if lastWindow == nil then
+        this.logger:i('Last window not found opens random window')
+        nextWindow = appWindows[1]
+    -- Last window exists
+    else
+        -- If not focused then focus on it
+        if hs.window.focusedWindow() ~= lastWindow then
+            this.logger:i('Last window not focused, focus on it')
+            nextWindow = lastWindow
+        -- Find next window in order
+        else
+            -- Find the index of the last window
+            local idIndex = 1
+            for index, winid in ipairs(idsList) do
+                if winid == this.lastWindowId then
+                    idIndex = index
+                    break
+                end
+            end
+
+            -- Get next index in cyclic way
+            this.logger:i('Switch to next window')
+            nextIndex = (idIndex % #idsList) + 1
+            nextWindow = idToWindow[idsList[nextIndex]]
+        end
+    end
+
+    this.moveToWindow(nextWindow)
+end
+
+this.openApp = function(appName, launchName)
+    local name = launchName or appName
+    this.logger:i('Launch ' .. name)
+    this.alert('Launch ' .. name)
+    local launched = hs.application.launchOrFocus(name)
+    if launched then
+        local app = hs.application.find(name)
+        this.moveToWindow(app:focusedWindow())
+    end
+end
+
+this.handleApp = function(appName, launchName)
+    local app = hs.application.find(appName)
+    -- If app is closed, open it
+    if app == nil then
+        this.openApp(appName, launchName)
+    else
+        -- Load all the app current open windows
+        local appWindows = hs.fnutils.ifilter(app:allWindows(), function(w)
+            return w:isStandard()
+        end)
+        if #appWindows == 0 then
+            this.openApp(appName, launchName)
+        elseif this.lastApp == appName then
+            this.logger:i('Cycle ' .. appName)
+            this.cycleWindows(appWindows)
+        else
+            this.logger:i('Move to ' .. appName)
+            this.moveToWindow(appWindows[1])
+        end
+    end
+
+    this.lastApp = appName
+end
+
+
 -- Init of application map
-this.init = function(switcherMap, hyperKey)
-  hs.application.enableSpotlightForNameSearches(true)
-  for appKey, appValue in pairs(switcherMap) do
-      -- Add binding to key
-      hyperKey:bind(switcherKey, appKey, function()
-          this.handleApp(appValue)
-      end)
-  end
+this.init = function(switcherMap, windowLaunchMap, hyperKey)
+    -- set up the binding for each key combo
+    for key, appName in pairs(switcherMap) do
+        hyperKey:bind({}, key, function()
+            this.handleApp(appName, windowLaunchMap[key])
+        end)
+    end
 end
 
 return this

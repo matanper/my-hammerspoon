@@ -72,15 +72,20 @@ end)
 local switcherMap = {
   s = "Slack",
   w = "Whatsapp",
-  a = "com.apple.mail",
+  a = "Mail",
   m = "Spotify",
-  t = "com.googlecode.iterm2",
-  c = "Google Chrome",
-  v = "com.microsoft.VSCode",
-  p = "com.jetbrains.pycharm",
+  t = "iTerm",
+  v = "Code",
+  p = "PyCharm",
   z = "zoom.us",
   d = "DBeaver",
-  e = "Finder"
+  e = "Finder",
+  b = "Brave Browser"
 }
 
-appSwitcher.init(switcherMap, hyper)
+-- if the app has to be launched by a different name than the one the windows are found by, this list
+-- will take precedence when opening the app.
+local switcherLaunchMap = {
+}
+
+appSwitcher.init(switcherMap, switcherLaunchMap, hyper)
