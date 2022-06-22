@@ -69,6 +69,7 @@ hyper:bind({}, "delete", function()
 end)
 
 -- Shortcuts for fast app switching
+-- In order to find the correct name run "lsappinfo" and put here the main title name.
 local switcherMap = {
   s = "Slack",
   w = "Whatsapp",
@@ -78,14 +79,18 @@ local switcherMap = {
   v = "Code",
   p = "PyCharm",
   z = "zoom.us",
-  d = "DBeaver",
+  d = "pgAdmin 4",
   e = "Finder",
-  b = "Brave Browser"
+  b = "Brave Browser",
+  o = "Microsoft Word"
 }
 
 -- if the app has to be launched by a different name than the one the windows are found by, this list
 -- will take precedence when opening the app.
+-- In order to find the correct name run "lsappinfo" and put here the name under the bundle path.
 local switcherLaunchMap = {
+  v = 'Visual Studio Code',
+  p = 'PyCharm CE'
 }
 
 appSwitcher.init(switcherMap, switcherLaunchMap, hyper)
