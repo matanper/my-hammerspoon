@@ -1,9 +1,5 @@
 local this = {}
 this.logger = hs.logger.new('layout-win','info')
-this.gridparts = 30
--- x1,x2,y1,y2
--- this.layout = {{0, 7, 0, 30}, {7, 23, 0, 30}, {23, 30, 0, 30}}
-this.layout = {{0, 10, 0, 15}, {10, 20, 0, 15}, {20, 30, 0, 15}, {0, 10, 15, 30}, {10, 20, 15, 30}, {20, 30, 15, 30}}
 
 
 this.calcOverlapArea = function(frame1, frame2)
@@ -28,42 +24,87 @@ this.nearestFrameIndex = function(frames, win)
 end
 
 
-this.getLayoutFrames = function(win)
+this.getLayoutFrames = function(screen)
   frames = {}
-  local screen = win:screen()
   local topbar_diff = screen:fullFrame().h - screen:frame().h
-  -- local screenWidth = screen:frame().w
-  -- local screenHeight = screen:fullFrame().h - topbar_diff
   local screenWidth = screen:fullFrame().w
   local screenHeight = screen:fullFrame().h
 
   for _, layout_part in pairs(this.layout) do
+    -- the layout parts represents: {x1, x2, y1, y2}
     x = screenWidth * layout_part[1] / this.gridparts
     y = screenHeight * layout_part[3] / this.gridparts + topbar_diff
     w = screenWidth * (layout_part[2] - layout_part[1]) / this.gridparts
     h = screenHeight * (layout_part[4] - layout_part[3]) / this.gridparts - topbar_diff
-    table.insert(frames, hs.geometry.rect(x, y, w, h))
+    -- Must include screen.x and screen.y since frames coordinates are absolute between all screens
+    -- (so x,y coordinates of some screens can be negative)
+    table.insert(frames, hs.geometry.rect({x=screen:fullFrame().x + x, y=screen:fullFrame().y + y, w=w, h=h}))
   end
   return frames
 end
 
 this.cycleWindow = function(win, forward)
-  local frames = this.getLayoutFrames(win)
+  local frames = this.getLayoutFrames(win:screen())
   local nearestFrameIndex = this.nearestFrameIndex(frames, win)
-  local nearestFrame = frames[nearestFrameIndex]
+  local targetFrame = frames[nearestFrameIndex]
+  local screen = win:screen()
   -- If frame already in position move to the next position
-  if nearestFrame:floor():equals(win:frame():floor()) then
+  if win:frame():floor():equals(targetFrame:floor()) then
     if forward then
-      nearestFrame = frames[(nearestFrameIndex % #frames) + 1]
+      nextIndex = (nearestFrameIndex % #frames) + 1
+      -- Move to next screen if exists
+      if nextIndex == 1 and screen ~= screen:next() then
+        targetFrame = this.getLayoutFrames(screen:next())[1]
+      else
+        targetFrame = frames[nextIndex]
+      end
     else
-      nearestFrame = frames[((nearestFrameIndex + #frames - 2) % #frames) + 1]
+      prevIndex = ((nearestFrameIndex + #frames - 2) % #frames) + 1
+      -- Move to previous screen if exists
+      if prevIndex == #frames and screen ~= screen:previous() then
+        targetFrame = this.getLayoutFrames(screen:previous())[#frames]
+      else
+        targetFrame = frames[prevIndex]
+      end
     end
   end
 
-  this.logger:i(win:frame():floor())
-  this.logger:i(nearestFrame)
-  win:setFrame(nearestFrame)
-  this.logger:i(win:frame())
+  win:move(targetFrame)
+
+end
+
+this.init = function(layouts, order, gridparts)
+  this.gridparts = gridparts
+  this.menuItems = {}
+  this.menu = hs.menubar.new()
+  local isFirst = true
+
+  for _, name in ipairs(order) do
+    func = function()
+      this.layout = layouts[name]
+      for _, item in pairs(this.menuItems) do
+        if name == item['title'] then
+          item['checked'] = true
+          this.logger:i('here')
+        else
+          item['checked'] = false
+        end
+      end
+      this.menu:setMenu(this.menuItems)
+    end
+    item = {title = name, fn = func}
+    if isFirst then
+      item['checked'] = true
+      item['fn']()
+      isFirst = false
+    else
+      item['checked'] = false
+    end
+    table.insert(this.menuItems, item)
+  end
+
+  this.menu:setTitle('layout'):setMenu(this.menuItems)
+
 end
 
 return this
