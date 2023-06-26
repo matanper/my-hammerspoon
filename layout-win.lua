@@ -75,35 +75,39 @@ end
 
 this.init = function(layouts, order, gridparts)
   this.gridparts = gridparts
-  this.menuItems = {}
-  this.menu = hs.menubar.new()
-  local isFirst = true
 
-  for _, name in ipairs(order) do
-    func = function()
-      this.layout = layouts[name]
-      for _, item in pairs(this.menuItems) do
-        if name == item['title'] then
-          item['checked'] = true
-          this.logger:i('here')
-        else
-          item['checked'] = false
+  if #order > 1 then
+    this.menuItems = {}
+    this.menu = hs.menubar.new()
+    local isFirst = true
+
+    for _, name in ipairs(order) do
+      func = function()
+        this.layout = layouts[name]
+        for _, item in pairs(this.menuItems) do
+          if name == item['title'] then
+            item['checked'] = true
+          else
+            item['checked'] = false
+          end
         end
+        this.menu:setMenu(this.menuItems)
       end
-      this.menu:setMenu(this.menuItems)
+      item = {title = name, fn = func}
+      if isFirst then
+        item['checked'] = true
+        item['fn']()
+        isFirst = false
+      else
+        item['checked'] = false
+      end
+      table.insert(this.menuItems, item)
     end
-    item = {title = name, fn = func}
-    if isFirst then
-      item['checked'] = true
-      item['fn']()
-      isFirst = false
-    else
-      item['checked'] = false
-    end
-    table.insert(this.menuItems, item)
+    this.menu:setTitle('layout'):setMenu(this.menuItems)
+  else
+    this.layout = layouts[order[1]]
+    this.logger:i('Using single layout' .. order[1])
   end
-
-  this.menu:setTitle('layout'):setMenu(this.menuItems)
 
 end
 

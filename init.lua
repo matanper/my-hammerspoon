@@ -11,10 +11,11 @@ end)
 
 -- Define windows layouts
 local layoutOptions = {}
-local order = {'Two Parts', 'Six Parts', 'Center Third'}
+local order = {'Two Thirds'} -- If more than 1 option defined, than a "layout" menu will be added to the top bar
 layoutOptions['Two Parts'] = {{0, 15, 0, 30}, {15, 30, 0, 30}}
 layoutOptions['Six Parts'] = {{0, 10, 0, 15}, {10, 20, 0, 15}, {20, 30, 0, 15}, {0, 10, 15, 30}, {10, 20, 15, 30}, {20, 30, 15, 30}}
 layoutOptions['Center Third'] = {{0, 7, 0, 30}, {7, 23, 0, 30}, {23, 30, 0, 30}}
+layoutOptions['Two Thirds'] = {{0, 20, 0, 30}, {20, 30, 0, 30}}
 layoutWin.init(layoutOptions,order, 30)
 
 -- Define shortcuts to switch windows of the layout
@@ -45,16 +46,18 @@ end)
 local switcherMap = {
   s = "Slack",
   w = "Whatsapp",
-  a = "Mail",
+  e = "Mail",
   m = "Spotify",
   t = "iTerm",
   v = "Code",
   p = "PyCharm",
   z = "zoom.us",
-  d = "pgAdmin 4",
-  e = "Finder",
-  b = "Brave Browser",
-  o = "Microsoft Word"
+  d = "DBeaver",
+  f = "Finder",
+  b = "Arc",
+  o = "Microsoft Word",
+  n = "Notion",
+  c = "Cron"
 }
 
 -- if the app has to be launched by a different name than the one the windows are found by, this list
