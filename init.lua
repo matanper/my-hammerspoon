@@ -46,7 +46,7 @@ end)
 local switcherMap = {
   s = "Slack",
   w = "Whatsapp",
-  e = "Mail",
+  e = "Canary Mail",
   m = "Spotify",
   t = "iTerm",
   v = "Code",
