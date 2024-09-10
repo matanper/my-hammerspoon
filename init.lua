@@ -51,13 +51,12 @@ local switcherMap = {
   t = "iTerm",
   v = "Code",
   p = "PyCharm",
-  z = "zoom.us",
   d = "DBeaver",
   f = "Finder",
   b = "Arc",
-  o = "Microsoft Word",
   n = "Notion",
-  c = "Cron"
+  c = "Notion Calendar",
+  j = "IntelliJ IDEA"
 }
 
 -- if the app has to be launched by a different name than the one the windows are found by, this list
@@ -65,7 +64,8 @@ local switcherMap = {
 -- In order to find the correct name run "lsappinfo" and put here the name under the bundle path.
 local switcherLaunchMap = {
   v = 'Visual Studio Code',
-  p = 'PyCharm CE'
+  p = 'PyCharm CE',
+  j = 'IntelliJ IDEA CE'
 }
 
 appSwitcher.init(switcherMap, switcherLaunchMap, hyper)
