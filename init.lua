@@ -11,7 +11,7 @@ end)
 
 -- Define windows layouts
 local layoutOptions = {}
-local order = {'Two Thirds', 'Two Parts'} -- If more than 1 option defined, than a "layout" menu will be added to the top bar
+local order = {'Two Thirds', 'Two Parts', 'Six Parts'} -- If more than 1 option defined, than a "layout" menu will be added to the top bar
 layoutOptions['Two Parts'] = {{0, 15, 0, 30}, {15, 30, 0, 30}}
 layoutOptions['Six Parts'] = {{0, 10, 0, 15}, {10, 20, 0, 15}, {20, 30, 0, 15}, {0, 10, 15, 30}, {10, 20, 15, 30}, {20, 30, 15, 30}}
 layoutOptions['Center Third'] = {{0, 7, 0, 30}, {7, 23, 0, 30}, {23, 30, 0, 30}}
@@ -21,11 +21,11 @@ layoutWin.init(layoutOptions,order, 30)
 -- Define shortcuts to switch windows of the layout
 hyper:bind({}, "right", function()
   local cwin = hs.window.focusedWindow()
-  layoutWin.cycleWindow(cwin, true)
+  layoutWin.moveWindow(cwin, true)
 end)
 hyper:bind({}, "left", function()
   local cwin = hs.window.focusedWindow()
-  layoutWin.cycleWindow(cwin, false)
+  layoutWin.moveWindow(cwin, false)
 end)
 -- Other window management options
 hyper:bind({}, "up", function() winwin:moveAndResize('maximize') end)

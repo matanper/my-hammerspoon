@@ -2,25 +2,38 @@ local this = {}
 this.logger = hs.logger.new('layout-win','info')
 
 
-this.calcOverlapArea = function(frame1, frame2)
-  x_overlap = math.max(0, math.min(frame1.x + frame1.w, frame2.x + frame2.w) - math.max(frame1.x, frame2.x))
-  y_overlap = math.max(0, math.min(frame1.y + frame1.h, frame2.y + frame2.h) - math.max(frame1.y, frame2.y))
-  overlapArea = x_overlap * y_overlap
-  return overlapArea
+this.isFramesEqual = function(frame1, frame2)
+  -- Define a tolerance for small differences
+  local tolerance = 1.0
+
+  -- Check if widths and heights are within the tolerance
+  if math.abs(frame1.w - frame2.w) > tolerance or math.abs(frame1.h - frame2.h) > tolerance then
+    return false
+  end
+  
+  -- Calculate the overlap dimensions
+  local x_overlap = math.max(0, math.min(frame1.x + frame1.w, frame2.x + frame2.w) - math.max(frame1.x, frame2.x))
+  local y_overlap = math.max(0, math.min(frame1.y + frame1.h, frame2.y + frame2.h) - math.max(frame1.y, frame2.y))
+
+  -- Calculate the overlap area
+  local overlapArea = x_overlap * y_overlap
+
+  -- Calculate the area of each frame
+  local area1 = frame1.w * frame1.h
+  local area2 = frame2.w * frame2.h
+  local minArea = math.min(area1, area2)
+
+  return (overlapArea / minArea) > 0.99
 end
 
-this.nearestFrameIndex = function(frames, win)
+this.currentFrameIndex = function(frames, win)
   local winFrame = win:frame()
-  local maxArea = 0
-  local maxIndex = 0
   for index, frame in pairs(frames) do
-    local overlapArea = this.calcOverlapArea(frame, winFrame)
-    if maxIndex == 0 or overlapArea > maxArea then
-      maxArea = overlapArea
-      maxIndex = index
+    if this.isFramesEqual(frame, winFrame) then
+      return index
     end
   end
-  return maxIndex
+  return nil
 end
 
 
@@ -43,33 +56,47 @@ this.getLayoutFrames = function(screen)
   return frames
 end
 
-this.cycleWindow = function(win, forward)
+this.moveWindow = function(win, forward)
   local frames = this.getLayoutFrames(win:screen())
-  local nearestFrameIndex = this.nearestFrameIndex(frames, win)
-  local targetFrame = frames[nearestFrameIndex]
-  local screen = win:screen()
-  -- If frame already in position move to the next position
-  if win:frame():floor():equals(targetFrame:floor()) then
+  local currentFrameIndex = this.currentFrameIndex(frames, win)
+  if currentFrameIndex == nil then
     if forward then
-      nextIndex = (nearestFrameIndex % #frames) + 1
-      -- Move to next screen if exists
-      if nextIndex == 1 and screen ~= screen:next() then
-        targetFrame = this.getLayoutFrames(screen:next())[1]
-      else
-        targetFrame = frames[nextIndex]
-      end
+      win:move(frames[#frames])
     else
-      prevIndex = ((nearestFrameIndex + #frames - 2) % #frames) + 1
-      -- Move to previous screen if exists
-      if prevIndex == #frames and screen ~= screen:previous() then
-        targetFrame = this.getLayoutFrames(screen:previous())[#frames]
-      else
-        targetFrame = frames[prevIndex]
-      end
+      win:move(frames[1])
+    end
+    return
+  end
+
+  local targetFrame = nil;
+  local screen = win:screen()
+  if forward then
+    nextIndex = (currentFrameIndex % #frames) + 1
+    -- Move to next screen if exists
+    if nextIndex == 1 and screen ~= screen:next() then
+      targetFrame = this.getLayoutFrames(screen:next())[1]
+    -- Does not cycle to the first frame if single screen
+    elseif nextIndex == 1 then
+      targetFrame = nil;
+    else
+      targetFrame = frames[nextIndex]
+    end
+  else
+    prevIndex = ((currentFrameIndex + #frames - 2) % #frames) + 1
+    -- Move to previous screen if exists
+    if prevIndex == #frames and screen ~= screen:previous() then
+      targetFrame = this.getLayoutFrames(screen:previous())[#frames]
+    -- Does not cycle to the last frame if single screen
+    elseif prevIndex == #frames then
+      targetFrame = nil
+    else
+      targetFrame = frames[prevIndex]
     end
   end
 
-  win:move(targetFrame)
+  if targetFrame ~= nil then
+    win:move(targetFrame)
+  end
 
 end
 
