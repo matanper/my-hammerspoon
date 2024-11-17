@@ -29,10 +29,12 @@ hyper:bind({}, "left", function()
 end)
 -- Other window management options
 hyper:bind({}, "up", function() winwin:moveAndResize('maximize') end)
-hyper:bind({}, 'down',  function() winwin:moveAndResize('halfdown') end, nil, function() winwin:moveAndResize('halfup') end)
+hyper:bind({}, 'down',  function() winwin:moveAndResize('minimize') end)
 hyper:bind({}, "return", function() hs.window.focusedWindow():toggleFullScreen() end)
 hyper:bind({"cmd"}, "left", function() winwin:moveToScreen('left') end)
 hyper:bind({"cmd"}, "right", function() winwin:moveToScreen('right') end)
+hyper:bind({"cmd"}, "up", function() winwin:moveAndResize('halfup') end)
+hyper:bind({"cmd"}, "down", function() winwin:moveAndResize('halfdown') end)
 
 -- shortcut to show desktop
 hyper:bind({}, "delete", function()
