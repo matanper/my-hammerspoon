@@ -106,6 +106,7 @@ this.init = function(layouts, order, gridparts)
   if #order > 1 then
     this.menuItems = {}
     this.menu = hs.menubar.new()
+
     local isFirst = true
 
     for _, name in ipairs(order) do
@@ -130,7 +131,8 @@ this.init = function(layouts, order, gridparts)
       end
       table.insert(this.menuItems, item)
     end
-    this.menu:setTitle('layout'):setMenu(this.menuItems)
+    this.menu:setIcon("~/.hammerspoon/menubar-icon.pdf")
+    this.menu:setMenu(this.menuItems)
   else
     this.layout = layouts[order[1]]
     this.logger:i('Using single layout' .. order[1])
