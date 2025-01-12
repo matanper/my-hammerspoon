@@ -70,13 +70,13 @@ this.openApp = function(appName, launchName)
     this.alert('Launch ' .. name)
     local launched = hs.application.launchOrFocus(name)
     if launched then
-        local app = hs.application.find(name)
+        local app = hs.application.find(name, true)
         this.moveToWindow(app:focusedWindow())
     end
 end
 
 this.handleApp = function(appName, launchName)
-    local app = hs.application.find(appName)
+    local app = hs.application.find(appName, true)
     -- If app is closed, open it
     if app == nil then
         this.openApp(appName, launchName)
@@ -102,6 +102,7 @@ end
 
 -- Init of application map
 this.init = function(switcherMap, windowLaunchMap, hyperKey)
+    hs.application.enableSpotlightForNameSearches(true)
     -- set up the binding for each key combo
     for key, appName in pairs(switcherMap) do
         hyperKey:bind({}, key, function()
