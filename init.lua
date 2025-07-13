@@ -50,16 +50,15 @@ local switcherMap = {
   w = "Whatsapp",
   e = "Canary Mail",
   m = "Spotify",
-  t = "iTerm",
+  t = "Ghostty",
   v = "Code",
-  p = "PyCharm",
   d = "DBeaver",
   f = "Finder",
-  b = "Arc",
+  b = "Zen",
   n = "Notion",
-  c = "ChatGPT",
-  j = "IntelliJ IDEA",
-  o = "Morgen"
+  g = "ChatGPT",
+  c = "Cursor",
+
 }
 
 -- if the app has to be launched by a different name than the one the windows are found by, this list
